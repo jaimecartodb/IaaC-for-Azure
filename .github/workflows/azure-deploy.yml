@@ -18,8 +18,12 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Cambiar al directorio de la API
+        run: cd api
+
       - name: Instala las dependencias
         run: npm install
+        working-directory: api
 
       - name: Configuración de las variables de entorno
         run: |
