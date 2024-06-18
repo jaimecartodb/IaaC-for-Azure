@@ -67,7 +67,7 @@ EOF
 }
 
 resource "azurerm_key_vault" "mykeyvault" {
-  name                        = "myKeyVault3"
+  name                        = "myKeyVault41"
   location                    = azurerm_resource_group.myrg.location
   resource_group_name         = azurerm_resource_group.myrg.name
   tenant_id                   = var.tenant_id
