@@ -33,7 +33,7 @@ jobs:
         run: terraform init
 
       - name: Crea el Terraform plan
-        run: terraform plan -out=tfplan
+        run: terraform plan -out=tfplan -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}"
 
       - name: Aplica Terraform
         run: terraform apply -auto-approve tfplan
