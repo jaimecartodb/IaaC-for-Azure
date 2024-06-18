@@ -18,10 +18,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Cambiar al directorio de la API
-        run: cd api
-        working-directory: api
-
       - name: Instala las dependencias
         run: npm install
         working-directory: api
