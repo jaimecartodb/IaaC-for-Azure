@@ -1,4 +1,4 @@
-name: Deploy Node.js API to Azure
+name: Desplega la API de Node.js en Azure
 
 on:
   push:
@@ -28,12 +28,16 @@ jobs:
           echo "ARM_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}" >> $GITHUB_ENV
           echo "ARM_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}" >> $GITHUB_ENV
 
-      - name: Run Terraform
-        run: |
-          terraform init
-          terraform apply -auto-approve
+      - name: Inicia Terraform
+        run: terraform init
 
-      - name: Deploy to Azure Web App
+      - name: Crea el Terraform plan
+        run: terraform plan -out=tfplan
+
+      - name: Aplica Terraform
+        run: terraform apply -auto-approve tfplan
+
+      - name: Desplega la app web en Azure
         uses: azure/webapps-deploy@v2
         with:
           app-name: iaac
