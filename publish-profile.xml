@@ -1,0 +1,11 @@
+<publishData>
+  <publishProfile 
+    profileName="iaac - Web Deploy" 
+    publishMethod="MSDeploy" 
+    publishUrl="iaac.scm.azurewebsites.net:443" 
+    msdeploySite="iaac" 
+    userName="$iaac" 
+    userPWD="AGNbPtZDwM38zZgt022kgYT3bntAgLKkJdSwx7dpBTjWDuhrtXXwild8urFl" 
+    destinationAppUrl="https://iaac.azurewebsites.net" 
+    webSystem="WebSites" />
+</publishData>
