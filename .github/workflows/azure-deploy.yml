@@ -33,7 +33,12 @@ jobs:
         run: terraform init
 
       - name: Importa el VMSS existente
-        run: terraform import azurerm_linux_virtual_machine_scale_set.example /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets/example-vmss
+        run: |
+          terraform import -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+                          -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
+                          -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" \
+                          -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
+                          azurerm_linux_virtual_machine_scale_set.example /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets/example-vmss
 
       - name: Crea el Terraform plan
         run: terraform plan -out=tfplan -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}"
