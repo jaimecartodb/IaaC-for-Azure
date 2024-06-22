@@ -11,6 +11,40 @@ resource "azurerm_resource_group" "myrg" {
   location = "East US"
 }
 
+resource "azurerm_log_analytics_workspace" "example" {
+  name                = "myLogAnalyticsWorkspace"
+  location            = azurerm_resource_group.myrg.location
+  resource_group_name = azurerm_resource_group.myrg.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+
+  tags = {
+    environment = "testing"
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "vm_diagnostics" {
+  name               = "vm-diagnostic-setting"
+  target_resource_id = azurerm_linux_virtual_machine.myvm.id
+
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.example.id
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+
+  log {
+    category = "AuditLogs"
+    enabled  = true
+  }
+
+  log {
+    category = "Security"
+    enabled  = true
+  }
+}
+
 resource "azurerm_virtual_network" "mynetwork" {
   name                = "myVNet"
   address_space       = ["10.0.0.0/16"]
@@ -66,8 +100,14 @@ EOF
   }
 }
 
+resource "random_string" "random" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
 resource "azurerm_key_vault" "mykeyvault" {
-  name                        = "myKeyVault42"
+  name                        = "myKeyVault${random_string.random.result}"
   location                    = azurerm_resource_group.myrg.location
   resource_group_name         = azurerm_resource_group.myrg.name
   tenant_id                   = var.tenant_id
@@ -85,11 +125,67 @@ resource "azurerm_key_vault" "mykeyvault" {
   }
 }
 
-# Crear un secreto en el Key Vault
 resource "azurerm_key_vault_secret" "example" {
   name         = "exampleSecret3"
   value        = "MySecretValue"
   key_vault_id = azurerm_key_vault.mykeyvault.id
+}
+
+resource "azurerm_monitor_autoscale_setting" "example" {
+  name                = "example-autoscale"
+  resource_group_name = azurerm_resource_group.myrg.name
+  location            = azurerm_resource_group.myrg.location
+  target_resource_id  = azurerm_linux_virtual_machine.myvm.id
+
+  profile {
+    name = "defaultProfile"
+
+    capacity {
+      default = 1
+      minimum = 1
+      maximum = 10
+    }
+
+    rule {
+      metric_trigger {
+        metric_name        = "Percentage CPU"
+        metric_resource_id = azurerm_linux_virtual_machine.myvm.id
+        operator           = "GreaterThan"
+        statistic          = "Average"
+        threshold          = 75
+        time_grain         = "PT1M"
+        time_window        = "PT5M"
+        time_aggregation   = "Average"
+      }
+
+      scale_action {
+        direction      = "Increase"
+        type           = "ChangeCount"
+        value          = "1"
+        cooldown       = "PT1M"
+      }
+    }
+
+    rule {
+      metric_trigger {
+        metric_name        = "Percentage CPU"
+        metric_resource_id = azurerm_linux_virtual_machine.myvm.id
+        operator           = "LessThan"
+        statistic          = "Average"
+        threshold          = 25
+        time_grain         = "PT1M"
+        time_window        = "PT5M"
+        time_aggregation   = "Average"
+      }
+
+      scale_action {
+        direction      = "Decrease"
+        type           = "ChangeCount"
+        value          = "1"
+        cooldown       = "PT1M"
+      }
+    }
+  }
 }
 
 data "azurerm_client_config" "current" {}
