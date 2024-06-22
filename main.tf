@@ -11,23 +11,17 @@ resource "azurerm_resource_group" "myrg" {
   location = "East US"
 }
 
-resource "azurerm_log_analytics_workspace" "example" {
+# Usar el Log Analytics Workspace existente
+data "azurerm_log_analytics_workspace" "existing" {
   name                = "myLogAnalyticsWorkspace"
-  location            = azurerm_resource_group.myrg.location
   resource_group_name = azurerm_resource_group.myrg.name
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
-
-  tags = {
-    environment = "testing"
-  }
 }
 
 resource "azurerm_monitor_diagnostic_setting" "vm_diagnostics" {
   name               = "vm-diagnostic-setting"
   target_resource_id = azurerm_linux_virtual_machine.myvm.id
 
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.example.id
+  log_analytics_workspace_id = data.azurerm_log_analytics_workspace.existing.id
 
   metric {
     category = "AllMetrics"
@@ -127,25 +121,27 @@ resource "azurerm_key_vault_secret" "example" {
   key_vault_id = azurerm_key_vault.mykeyvault.id
 }
 
-resource "azurerm_virtual_machine_scale_set" "example" {
+resource "azurerm_linux_virtual_machine_scale_set" "example" {
   name                = "example-vmss"
   location            = azurerm_resource_group.myrg.location
   resource_group_name = azurerm_resource_group.myrg.name
-  upgrade_policy_mode = "Manual"
-  sku {
-    name     = "Standard_DS1_v2"
-    tier     = "Standard"
-    capacity = 2
+  sku                 = "Standard_DS1_v2"
+  admin_username      = "adminuser"
+  admin_password      = "Password1234!"
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "18.04-LTS"
+    version   = "latest"
   }
-  os_profile {
-    computer_name_prefix = "example-vmss"
-    admin_username       = "adminuser"
-    admin_password       = "Password1234!"
+
+  os_disk {
+    caching                   = "ReadWrite"
+    storage_account_type      = "Standard_LRS"
   }
-  os_profile_linux_config {
-    disable_password_authentication = false
-  }
-  network_profile {
+
+  network_interface {
     name    = "example-vmss-nic"
     primary = true
     ip_configuration {
@@ -154,24 +150,13 @@ resource "azurerm_virtual_machine_scale_set" "example" {
       primary   = true
     }
   }
-  storage_profile_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
-  }
-  storage_profile_os_disk {
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
-  }
 }
 
 resource "azurerm_monitor_autoscale_setting" "example" {
   name                = "example-autoscale"
   resource_group_name = azurerm_resource_group.myrg.name
   location            = azurerm_resource_group.myrg.location
-  target_resource_id  = azurerm_virtual_machine_scale_set.example.id
+  target_resource_id  = azurerm_linux_virtual_machine_scale_set.example.id
 
   profile {
     name = "defaultProfile"
@@ -185,7 +170,7 @@ resource "azurerm_monitor_autoscale_setting" "example" {
     rule {
       metric_trigger {
         metric_name        = "Percentage CPU"
-        metric_resource_id = azurerm_virtual_machine_scale_set.example.id
+        metric_resource_id = azurerm_linux_virtual_machine_scale_set.example.id
         operator           = "GreaterThan"
         statistic          = "Average"
         threshold          = 75
@@ -205,7 +190,7 @@ resource "azurerm_monitor_autoscale_setting" "example" {
     rule {
       metric_trigger {
         metric_name        = "Percentage CPU"
-        metric_resource_id = azurerm_virtual_machine_scale_set.example.id
+        metric_resource_id = azurerm_linux_virtual_machine_scale_set.example.id
         operator           = "LessThan"
         statistic          = "Average"
         threshold          = 25
