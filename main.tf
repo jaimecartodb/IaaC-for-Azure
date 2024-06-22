@@ -27,11 +27,6 @@ resource "azurerm_monitor_diagnostic_setting" "vm_diagnostics" {
     category = "AllMetrics"
     enabled  = true
   }
-
-  log {
-    category = "Security"
-    enabled  = true
-  }
 }
 
 resource "azurerm_virtual_network" "mynetwork" {
