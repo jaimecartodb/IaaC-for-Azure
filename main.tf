@@ -35,11 +35,6 @@ resource "azurerm_monitor_diagnostic_setting" "vm_diagnostics" {
   }
 
   log {
-    category = "AuditLogs"
-    enabled  = true
-  }
-
-  log {
     category = "Security"
     enabled  = true
   }
@@ -68,6 +63,7 @@ resource "azurerm_network_interface" "mynic" {
     name                          = "myNICConfig"
     subnet_id                     = azurerm_subnet.mysubnet.id
     private_ip_address_allocation = "Dynamic"
+    primary                      = true
   }
 }
 
@@ -131,11 +127,51 @@ resource "azurerm_key_vault_secret" "example" {
   key_vault_id = azurerm_key_vault.mykeyvault.id
 }
 
+resource "azurerm_virtual_machine_scale_set" "example" {
+  name                = "example-vmss"
+  location            = azurerm_resource_group.myrg.location
+  resource_group_name = azurerm_resource_group.myrg.name
+  upgrade_policy_mode = "Manual"
+  sku {
+    name     = "Standard_DS1_v2"
+    tier     = "Standard"
+    capacity = 2
+  }
+  os_profile {
+    computer_name_prefix = "example-vmss"
+    admin_username       = "adminuser"
+    admin_password       = "Password1234!"
+  }
+  os_profile_linux_config {
+    disable_password_authentication = false
+  }
+  network_profile {
+    name    = "example-vmss-nic"
+    primary = true
+    ip_configuration {
+      name      = "internal"
+      subnet_id = azurerm_subnet.mysubnet.id
+      primary   = true
+    }
+  }
+  storage_profile_image_reference {
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "18.04-LTS"
+    version   = "latest"
+  }
+  storage_profile_os_disk {
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = "Standard_LRS"
+  }
+}
+
 resource "azurerm_monitor_autoscale_setting" "example" {
   name                = "example-autoscale"
   resource_group_name = azurerm_resource_group.myrg.name
   location            = azurerm_resource_group.myrg.location
-  target_resource_id  = azurerm_linux_virtual_machine.myvm.id
+  target_resource_id  = azurerm_virtual_machine_scale_set.example.id
 
   profile {
     name = "defaultProfile"
@@ -149,7 +185,7 @@ resource "azurerm_monitor_autoscale_setting" "example" {
     rule {
       metric_trigger {
         metric_name        = "Percentage CPU"
-        metric_resource_id = azurerm_linux_virtual_machine.myvm.id
+        metric_resource_id = azurerm_virtual_machine_scale_set.example.id
         operator           = "GreaterThan"
         statistic          = "Average"
         threshold          = 75
@@ -159,17 +195,17 @@ resource "azurerm_monitor_autoscale_setting" "example" {
       }
 
       scale_action {
-        direction      = "Increase"
-        type           = "ChangeCount"
-        value          = "1"
-        cooldown       = "PT1M"
+        direction = "Increase"
+        type      = "ChangeCount"
+        value     = "1"
+        cooldown  = "PT1M"
       }
     }
 
     rule {
       metric_trigger {
         metric_name        = "Percentage CPU"
-        metric_resource_id = azurerm_linux_virtual_machine.myvm.id
+        metric_resource_id = azurerm_virtual_machine_scale_set.example.id
         operator           = "LessThan"
         statistic          = "Average"
         threshold          = 25
@@ -179,10 +215,10 @@ resource "azurerm_monitor_autoscale_setting" "example" {
       }
 
       scale_action {
-        direction      = "Decrease"
-        type           = "ChangeCount"
-        value          = "1"
-        cooldown       = "PT1M"
+        direction = "Decrease"
+        type      = "ChangeCount"
+        value     = "1"
+        cooldown  = "PT1M"
       }
     }
   }
