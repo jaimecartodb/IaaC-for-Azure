@@ -11,7 +11,7 @@ resource "azurerm_resource_group" "myrg" {
   location = "East US"
 }
 
-# Usar el Log Analytics Workspace existente
+# Se define el Log Analytics Workspace existente
 data "azurerm_log_analytics_workspace" "existing" {
   name                = "myLogAnalyticsWorkspace"
   resource_group_name = azurerm_resource_group.myrg.name
@@ -91,6 +91,7 @@ resource "random_string" "random" {
   upper   = false
 }
 
+# Se crea un string random para dar un nombre distinto al myKeyVault para cada creación de infraestructura 
 resource "azurerm_key_vault" "mykeyvault" {
   name                        = "myKeyVault${random_string.random.result}"
   location                    = azurerm_resource_group.myrg.location
@@ -120,12 +121,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "example" {
   name                = "example-vmss"
   location            = azurerm_resource_group.myrg.location
   resource_group_name = azurerm_resource_group.myrg.name
-
   sku                 = "Standard_DS1_v2"
-  instances           = 2
-
-  admin_username = "adminuser"
-  admin_password = "Password1234!"
+  admin_username      = "adminuser"
+  admin_password      = "Password1234!"
 
   source_image_reference {
     publisher = "Canonical"
@@ -147,49 +145,6 @@ resource "azurerm_linux_virtual_machine_scale_set" "example" {
       subnet_id = azurerm_subnet.mysubnet.id
       primary   = true
     }
-  }
-
-  admin_ssh_key {
-    username   = "adminuser"
-    public_key = <<EOF
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDT5Y3cpT6P7v/wszaMIPK61ZvsmS7fccix/lEDXOrccq1CKk4tXAL4uRY9OdvWoFGeH04D4RFrGVX89fYGhFa+KJD0SOpWztWsK50xsLhzId6mFabS24JE/ZkVrGmQo4K+kqbJul3WwRhk4N+t8uTXGLS3S3hKWUn3h0DqIDulKDt/XBuEYl4opsbllLi/VQKVU5gbcOJPYZjLKcMS5uAQipnt66cHMuWK73+teVLQyKa48uYaXE89tT4w2H9R7Xyx5aAl6J2WlJmmHf97sDY5rC7I6ENFIUAsCo1zhsI39MQaSGQb2V4UnFmpQVDFH+/AC+NZbZeWfHirCgDtAUptc9UwYyHSMzROmrddzd3CBpZZl/YTgNxfJa/StsfjXTRZLz87uMY8X/SXU6uSw25nL1UrCy+q9mP1PEYwVUZS65vg1IUI38lWVmgfKD+47LYDVm4Yumb5993B0xhmWMVh30hM8nZcAqCV8Qtwjr12KfOqFuViZ+V32jE1+eiXYuETDK7yh5MPKQrmLNT8mCF0iT8oDYMF3Jp4CFrsaCQGBbOuAFeyieuHSNs9vKdqXkQLGXo2Rvrx1EwpxARVwgauuGFxt7cYU8y3vKmDmM64yd1FdfEPrfsWtgPm1hxQFucuocvptaf8m0ogB0rZwemPz3JyBCZoLOYacdWkgTHV6Q== jaimedemoranavarro@gmail.com
-EOF
-  }
-}
-
-resource "azurerm_storage_account" "diag_storage" {
-  name                     = "diagstorageaccount"
-  resource_group_name      = azurerm_resource_group.myrg.name
-  location                 = azurerm_resource_group.myrg.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-}
-
-resource "azurerm_monitor_diagnostic_setting" "vm_diagnostics" {
-  name               = "vm-diagnostic-setting"
-  target_resource_id = azurerm_linux_virtual_machine.myvm.id
-
-  storage_account_id         = azurerm_storage_account.diag_storage.id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.example.id
-
-  log {
-    category = "Administrative"
-    enabled  = true
-  }
-
-  log {
-    category = "Security"
-    enabled  = true
-  }
-
-  log {
-    category = "System"
-    enabled  = true
-  }
-
-  metric {
-    category = "AllMetrics"
-    enabled  = true
   }
 }
 
