@@ -157,6 +157,42 @@ EOF
   }
 }
 
+resource "azurerm_storage_account" "diag_storage" {
+  name                     = "diagstorageaccount"
+  resource_group_name      = azurerm_resource_group.myrg.name
+  location                 = azurerm_resource_group.myrg.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+resource "azurerm_monitor_diagnostic_setting" "vm_diagnostics" {
+  name               = "vm-diagnostic-setting"
+  target_resource_id = azurerm_linux_virtual_machine.myvm.id
+
+  storage_account_id         = azurerm_storage_account.diag_storage.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.example.id
+
+  log {
+    category = "Administrative"
+    enabled  = true
+  }
+
+  log {
+    category = "Security"
+    enabled  = true
+  }
+
+  log {
+    category = "System"
+    enabled  = true
+  }
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
+
 resource "azurerm_monitor_autoscale_setting" "example" {
   name                = "example-autoscale"
   resource_group_name = azurerm_resource_group.myrg.name
