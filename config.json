@@ -1,0 +1,20 @@
+{
+    "metrics": {
+      "enabled": true,
+      "retentionPolicy": {
+        "days": 7,
+        "enabled": false
+      }
+    },
+    "logs": [
+      {
+        "category": "PerformanceCounters",
+        "enabled": true,
+        "retentionPolicy": {
+          "days": 7,
+          "enabled": false
+        }
+      }
+    ]
+  }
+  

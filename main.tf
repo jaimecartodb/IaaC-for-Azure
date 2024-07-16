@@ -148,6 +148,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "example" {
   }
 }
 
+# Se define la lógica de escalado para que se aprovisionen nuevas máquinas cuando las actuales tengan más del 75% de uso de la CPU
 resource "azurerm_monitor_autoscale_setting" "example" {
   name                = "example-autoscale"
   resource_group_name = azurerm_resource_group.myrg.name
