@@ -11,7 +11,7 @@ resource "azurerm_resource_group" "myrg" {
   location = "East US"
 }
 
-# Se define el Log Analytics Workspace existente
+# Se define el Log Analytics Workspace existente .
 data "azurerm_log_analytics_workspace" "existing" {
   name                = "myLogAnalyticsWorkspace"
   resource_group_name = azurerm_resource_group.myrg.name
