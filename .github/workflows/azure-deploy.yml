@@ -32,29 +32,33 @@ jobs:
       - name: Inicia Terraform
         run: terraform init
 
-      - name: Verifica el estado actual de Terraform
-        id: state
-        run: terraform state list
-
       - name: Elimina el estado anterior del VMSS (si existe)
-        if: contains(steps.state.outputs.stdout, 'azurerm_linux_virtual_machine_scale_set.example')
         run: terraform state rm azurerm_linux_virtual_machine_scale_set.example
+        continue-on-error: true
 
       - name: Elimina el estado anterior del monitor de diagnóstico (si existe)
-        if: contains(steps.state.outputs.stdout, 'azurerm_monitor_diagnostic_setting.vm_diagnostics')
         run: terraform state rm azurerm_monitor_diagnostic_setting.vm_diagnostics
+        continue-on-error: true
 
       - name: Elimina el estado anterior de la configuración de escalado automático (si existe)
-        if: contains(steps.state.outputs.stdout, 'azurerm_monitor_autoscale_setting.example')
         run: terraform state rm azurerm_monitor_autoscale_setting.example
+        continue-on-error: true
 
-      - name: Import existing diagnostic setting
+      - name: Importa el VMSS existente en el estado de Terraform
         run: |
           terraform import -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
                             -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
                             -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" \
                             -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
-                            azurerm_monitor_diagnostic_setting.vm_diagnostics "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/myVM|vm-diagnostic-setting"
+                            azurerm_linux_virtual_machine_scale_set.example /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets/example-vmss
+        continue-on-error: true
+
+      - name: Importa el monitor de diagnóstico existente
+        run: terraform import -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}" azurerm_monitor_diagnostic_setting.vm_diagnostics "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/myVM|vm-diagnostic-setting"
+        continue-on-error: true
+
+      - name: Importa la configuración de escalado automático existente
+        run: terraform import -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}" azurerm_monitor_autoscale_setting.example "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/myResourceGroup/providers/Microsoft.Insights/autoScaleSettings/example-autoscale"
         continue-on-error: true
 
       - name: Crea el Terraform plan
