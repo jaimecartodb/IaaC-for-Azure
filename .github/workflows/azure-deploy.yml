@@ -40,7 +40,7 @@ jobs:
         run: terraform state rm azurerm_monitor_diagnostic_setting.vm_diagnostics
         continue-on-error: true
 
-      - name: Elimina el estado anterior de la configuración de escalado automático (si existe)
+      - name: Elimina el estado anterior de la configuración de escalado automático (sólo si existe)
         run: terraform state rm azurerm_monitor_autoscale_setting.example
         continue-on-error: true
 
