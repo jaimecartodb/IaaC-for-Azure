@@ -32,19 +32,17 @@ jobs:
       - name: Inicia Terraform
         run: terraform init
 
-      - name: Importa el VMSS existente
-        run: |
-          terraform import -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
-                          -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
-                          -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" \
-                          -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
-                          azurerm_linux_virtual_machine_scale_set.example /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets/example-vmss
+      - name: Elimina el estado anterior del VMSS (si existe)
+        run: terraform state rm azurerm_linux_virtual_machine_scale_set.example
+        continue-on-error: true
 
-      - name: Importa el monitor de diagnóstico existente
-        run: terraform import -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}" azurerm_monitor_diagnostic_setting.vm_diagnostics "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/myVM|vm-diagnostic-setting"
+      - name: Elimina el estado anterior del monitor de diagnóstico (si existe)
+        run: terraform state rm azurerm_monitor_diagnostic_setting.vm_diagnostics
+        continue-on-error: true
 
-      - name: Importa la configuración de escalado automático existente
-        run: terraform import -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}" azurerm_monitor_autoscale_setting.example "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/myResourceGroup/providers/Microsoft.Insights/autoScaleSettings/example-autoscale"
+      - name: Elimina el estado anterior de la configuración de escalado automático (si existe)
+        run: terraform state rm azurerm_monitor_autoscale_setting.example
+        continue-on-error: true
 
       - name: Crea el Terraform plan
         run: terraform plan -out=tfplan -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}"
