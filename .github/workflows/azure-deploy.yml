@@ -36,7 +36,7 @@ jobs:
         run: terraform state rm azurerm_linux_virtual_machine_scale_set.example
         continue-on-error: true
 
-      - name: Elimina el estado anterior del monitor de diagnóstico (si existe)
+      - name: Elimina el estado anterior del monitor de diagnóstico (solo si existe)
         run: terraform state rm azurerm_monitor_diagnostic_setting.vm_diagnostics
         continue-on-error: true
 
