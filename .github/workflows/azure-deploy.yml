@@ -44,6 +44,15 @@ jobs:
         run: terraform state rm azurerm_monitor_autoscale_setting.example
         continue-on-error: true
 
+      - name: Importa los diagnostic settings de mi entorno
+        run: |
+          terraform import -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+                            -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
+                            -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" \
+                            -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
+                            azurerm_monitor_diagnostic_setting.vm_diagnostics "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/myVM|vm-diagnostic-setting"
+        continue-on-error: true
+
       - name: Crea el Terraform plan
         run: terraform plan -out=tfplan -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}"
 
